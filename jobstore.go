@@ -32,6 +32,7 @@ const (
 	TriggerStateComplete
 )
 
+// String returns the trigger state's name (e.g. "waiting", "paused").
 func (s TriggerState) String() string {
 	switch s {
 	case TriggerStatePaused:
