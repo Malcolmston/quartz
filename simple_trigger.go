@@ -126,6 +126,35 @@ func (t *SimpleTrigger) computeAfter(fired time.Time) time.Time {
 	return next
 }
 
+// FireTimeAfter returns the first scheduled fire time strictly after the given
+// time, or the zero time when the trigger has no such fire (it is exhausted by
+// its repeat count or end time). It is a pure query that does not consult or
+// mutate the trigger's running state, mirroring the original Quartz
+// SimpleTrigger.getFireTimeAfter(Date). Fire times are the start time plus
+// whole multiples of the interval; a trigger with RepeatForever is unbounded,
+// otherwise it fires repeatCount+1 times in total.
+func (t *SimpleTrigger) FireTimeAfter(after time.Time) time.Time {
+	if t.startTime.After(after) {
+		if !t.endTime.IsZero() && t.startTime.After(t.endTime) {
+			return time.Time{}
+		}
+		return t.startTime
+	}
+	if t.interval <= 0 {
+		// The only fire is the start time, which is not after 'after'.
+		return time.Time{}
+	}
+	n := int(after.Sub(t.startTime)/t.interval) + 1
+	if t.repeatCount != RepeatForever && n > t.repeatCount {
+		return time.Time{}
+	}
+	fire := t.startTime.Add(time.Duration(n) * t.interval)
+	if !t.endTime.IsZero() && fire.After(t.endTime) {
+		return time.Time{}
+	}
+	return fire
+}
+
 // UpdateAfterMisfire implements Trigger. It reschedules the trigger relative to
 // now according to its misfire policy.
 func (t *SimpleTrigger) UpdateAfterMisfire(now time.Time) time.Time {

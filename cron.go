@@ -262,6 +262,20 @@ func (c *CronExpression) Next(after time.Time) time.Time {
 	return time.Time{}
 }
 
+// IsSatisfiedBy reports whether the given time exactly matches the expression,
+// evaluated in the time's own location and at whole-second granularity
+// (sub-second components are ignored). It mirrors the original Quartz
+// CronExpression.isSatisfiedBy(Date) predicate: a time satisfies the expression
+// when its second, minute, hour and month all match and its day satisfies the
+// day-of-month / day-of-week rule.
+func (c *CronExpression) IsSatisfiedBy(t time.Time) bool {
+	return bitSet(c.seconds, t.Second()) &&
+		bitSet(c.minutes, t.Minute()) &&
+		bitSet(c.hours, t.Hour()) &&
+		bitSet(c.months, int(t.Month())) &&
+		c.dayMatches(t)
+}
+
 // dayMatches applies the Unix OR/AND day semantics described on CronExpression.
 func (c *CronExpression) dayMatches(t time.Time) bool {
 	dom := bitSet(c.daysOfMon, t.Day())

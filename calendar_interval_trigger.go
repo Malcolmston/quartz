@@ -179,6 +179,27 @@ func (t *CalendarIntervalTrigger) Triggered(now time.Time) time.Time {
 	return t.next
 }
 
+// FireTimeAfter returns the first scheduled fire time strictly after the given
+// time, or the zero time when the trigger has no such fire (it is past its end
+// time or its count is non-positive so it fires only once). It is a pure query
+// that does not consult or mutate the trigger's running state, mirroring the
+// original Quartz CalendarIntervalTrigger.getFireTimeAfter(Date). Advancement
+// uses the same calendar arithmetic as normal firing, so successive fires honor
+// the varying length of months and years in the trigger's location.
+func (t *CalendarIntervalTrigger) FireTimeAfter(after time.Time) time.Time {
+	fire := t.startTime
+	if fire.After(after) {
+		if !t.endTime.IsZero() && fire.After(t.endTime) {
+			return time.Time{}
+		}
+		return fire
+	}
+	for !fire.IsZero() && !fire.After(after) {
+		fire = t.calendar_interval_triggerComputeAfter(fire)
+	}
+	return fire
+}
+
 // UpdateAfterMisfire implements Trigger. It reschedules the trigger relative to
 // now according to its misfire policy: MisfireIgnore leaves the next fire time
 // unchanged, MisfireFireNow sets it to now, and MisfireSmart and

@@ -1,0 +1,10 @@
+{
+  "repo": "quartz",
+  "upstream": "quartz-scheduler/quartz",
+  "parityBefore": "69%",
+  "parityAfter": "100%",
+  "upstreamCasesSynced": 26,
+  "gapsFound": 3,
+  "gapsClosed": 3,
+  "asOf": "2026-07-18"
+}
